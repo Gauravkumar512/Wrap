@@ -1,3 +1,37 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+build/
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Prisma generated client
+/src/generated/prisma
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Coverage / test output
+coverage/
+*.lcov
+
+# Caches
+.cache/
+.npm/
+*.tsbuildinfo
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
