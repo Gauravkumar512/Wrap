@@ -1,6 +1,7 @@
 import prisma from "../config/db";
 import { nanoid } from "nanoid";
 import { ShortenRequest } from "../types";
+import { setCachedUrl } from "./cache.service";
 
 export async function createShortUrl(data: ShortenRequest): Promise<string> {
     let retries = 0;
@@ -20,6 +21,8 @@ export async function createShortUrl(data: ShortenRequest): Promise<string> {
             userId: data.userId ?? null,
             expiresAT: expiresAt,
     }})
+
+        await setCachedUrl(generatedSlug, data.longUrl);
 
         return generatedSlug;
     }
