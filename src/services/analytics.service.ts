@@ -1,6 +1,20 @@
 import prisma from  '../config/db';
+import redis from '../config/redis';
+
+
+const ANALYTICS_CACHE_TTL = 30;
 
 export async function getAnalytic(slug: string){
+
+    const cacheKey = 'analytics:${slug}';
+    const cached = await redis.get(cacheKey);
+
+    if(cached) {
+        console.log('Analytics cache hit for slug:', slug);
+        return JSON.parse(cached);
+    }
+
+    console.log('Analytics cache miss for slug:', slug);
 
     const url = await prisma.url.findUnique({
         where : { slug },
@@ -55,7 +69,7 @@ export async function getAnalytic(slug: string){
     }),
     ])
 
-    return {
+    const result = {
         slug,
         longUrl: url.longUrl,
         totalClicks,
@@ -63,4 +77,8 @@ export async function getAnalytic(slug: string){
         grpDevice: grpDevice.map(item => ({ Device: item.userAgent, count: item._count.userAgent })),
         recentClicks,
     }
+
+    await redis.set(cacheKey, JSON.stringify(result), 'EX', ANALYTICS_CACHE_TTL);
+
+    return result;
 }
