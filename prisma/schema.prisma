@@ -36,13 +36,15 @@ clicks Click[]
 model Click {
 id BigInt @id @default(autoincrement())
 clickedAt DateTime @default(now())
-idAddress String?
+ipAddress String?
 country String?
 userAgent String?
 referrer  String?
 
 urlId Int
 url Url @relation(fields: [urlId], references: [id], onDelete: Cascade)
+
+@@index([urlId, clickedAt(sort: Desc)])
 }
 
 

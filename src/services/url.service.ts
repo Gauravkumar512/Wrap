@@ -22,7 +22,7 @@ export async function createShortUrl(data: ShortenRequest): Promise<string> {
             expiresAT: expiresAt,
     }})
 
-        await setCachedUrl(generatedSlug, data.longUrl);
+        await setCachedUrl(generatedSlug, { longUrl: data.longUrl, urlId: url.id });
 
         return generatedSlug;
     }
@@ -38,10 +38,10 @@ export async function createShortUrl(data: ShortenRequest): Promise<string> {
     throw new Error("Failed to generate a unique slug after multiple attempts.");
 }
 
-export async function getLongUrl(slug: string): Promise<string | null> {
+export async function getUrlBySlug(slug: string) {
     const url = await prisma.url.findUnique({
         where: { slug },
     });
 
-    return url ? url.longUrl : null;
+    return url;
 }
