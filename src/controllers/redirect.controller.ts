@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { getCachedUrl , setCachedUrl} from '../services/cache.service';
 import { getUrlBySlug } from '../services/url.service';
 import { clickQueue } from '../config/queue';
 import { ClickEvent } from '../types';
 
-export async function handleRedirect(req: Request, res: Response) {
+
+export async function handleRedirect(req: Request, res: Response, next: NextFunction) {
 
     try {
         const { slug } = req.params;
@@ -43,7 +44,6 @@ export async function handleRedirect(req: Request, res: Response) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        next(error)
     }
 }

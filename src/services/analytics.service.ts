@@ -1,7 +1,6 @@
 import prisma from  '../config/db';
 import redis from '../config/redis';
 
-
 const ANALYTICS_CACHE_TTL = 30;
 
 export async function getAnalytic(slug: string){

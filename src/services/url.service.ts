@@ -4,6 +4,7 @@ import { ShortenRequest } from "../types";
 import { setCachedUrl } from "./cache.service";
 
 export async function createShortUrl(data: ShortenRequest): Promise<string> {
+    
     let retries = 0;
     let maxRetries = 3;
     
@@ -29,7 +30,7 @@ export async function createShortUrl(data: ShortenRequest): Promise<string> {
         catch (error: any){
             if(error.code === 'P2002'){
                 retries++;
-                continue; // Slug collision, try again
+                continue; 
             }
             throw error;    
         } 
