@@ -2,7 +2,7 @@ import prisma from "../config/db";
 import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { ShortenRequest } from "../types";
-import { setCachedUrl } from "./cache.service";
+import { setCachedUrl, deleteCachedUrl, deleteAnalyticsCache } from "./cache.service";
 
 export async function createShortUrl(data: ShortenRequest): Promise<string> {
     
@@ -46,4 +46,36 @@ export async function getUrlBySlug(slug: string) {
     });
 
     return url;
+}
+
+export async function getUserLinks(clerkUserId: string) {
+    const urls = await prisma.url.findMany({
+        where: { clerkUserId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+            _count: { select: { clicks: true } },
+        },
+    });
+
+    return urls.map(url => ({
+        id: url.id,
+        slug: url.slug,
+        longUrl: url.longUrl,
+        createdAt: url.createdAt.toISOString(),
+        totalClicks: url._count.clicks,
+        expiresAt: url.expiresAT.toISOString(),
+    }));
+}
+
+export async function deleteLink(slug: string, clerkUserId: string): Promise<void> {
+    const url = await prisma.url.findUnique({ where: { slug } });
+    if (!url) throw new Error('Link not found');
+    if (url.clerkUserId !== clerkUserId) throw new Error('Unauthorized');
+
+    await Promise.all([
+        deleteCachedUrl(slug),
+        deleteAnalyticsCache(slug),
+    ]);
+
+    await prisma.url.delete({ where: { slug } });
 }

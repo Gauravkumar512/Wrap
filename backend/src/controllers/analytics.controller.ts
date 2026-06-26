@@ -2,10 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import { ExpressRequestWithAuth } from '@clerk/express';
 import { getAnalytic } from '../services/analytics.service';
 
+const SLUG_RE = /^[a-zA-Z0-9_-]{1,20}$/;
+
 export async function handleAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
 
     try {
         const slug = req.params.slug as string;
+
+        if (!SLUG_RE.test(slug)) {
+            res.status(404).json({ message: 'URL not found' });
+            return;
+        }
         const { userId: clerkUserId } = (req as ExpressRequestWithAuth).auth();
 
         const analyticData = await getAnalytic(slug, clerkUserId!);

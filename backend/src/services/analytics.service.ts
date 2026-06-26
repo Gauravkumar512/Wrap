@@ -6,12 +6,17 @@ const ANALYTICS_CACHE_TTL = 30;
 export async function getAnalytic(slug: string, clerkUserId: string) {
 
     const cacheKey = `analytics:${slug}`;
-    const cached = await redis.get(cacheKey);
 
-    if(cached) {
-        const parsed = JSON.parse(cached);
-        if(parsed.clerkUserId !== clerkUserId) return 'forbidden';
-        return parsed;
+    try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.clerkUserId !== clerkUserId) return 'forbidden';
+            const { clerkUserId: _id, ...publicData } = parsed;
+            return publicData;
+        }
+    } catch {
+        // Redis down — fall through to DB
     }
 
     const url = await prisma.url.findUnique({
@@ -47,7 +52,6 @@ export async function getAnalytic(slug: string, clerkUserId: string) {
             take: 10,
             select: {
                 clickedAt: true,
-                ipAddress: true,
                 country: true,
                 userAgent: true,
                 referrer: true,
@@ -65,7 +69,12 @@ export async function getAnalytic(slug: string, clerkUserId: string) {
         recentClicks,
     }
 
-    await redis.set(cacheKey, JSON.stringify(result), 'EX', ANALYTICS_CACHE_TTL);
+    try {
+        await redis.set(cacheKey, JSON.stringify(result), 'EX', ANALYTICS_CACHE_TTL);
+    } catch {
+        // Redis down — next request re-fetches from DB
+    }
 
-    return result;
+    const { clerkUserId: _id, ...publicResult } = result;
+    return publicResult;
 }

@@ -5,10 +5,17 @@ import { clickQueue } from '../config/queue';
 import { ClickEvent } from '../types';
 
 
+const SLUG_RE = /^[a-zA-Z0-9_-]{1,20}$/;
+
 export async function handleRedirect(req: Request, res: Response, next: NextFunction): Promise<void> {
 
     try {
         const slug = req.params.slug as string;
+
+        if (!SLUG_RE.test(slug)) {
+            res.status(404).json({ message: 'URL not found' });
+            return;
+        }
 
         let targetUrl: string;
         let targetId: number;
@@ -45,6 +52,7 @@ export async function handleRedirect(req: Request, res: Response, next: NextFunc
 
         clickQueue.add('click-events', {
             urlId: targetId,
+            slug,
             ipAddress: req.ip || 'Unknown',
             country: (req.headers['cf-ipcountry'] as string) || 'Unknown',
             userAgent: req.headers['user-agent'] || 'Unknown',

@@ -11,7 +11,8 @@ build/
 !.env.example
 
 # Prisma generated client
-/src/generated/prisma
+src/generated/prisma
+backend/src/generated/prisma
 
 # Logs
 logs/

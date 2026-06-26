@@ -5,6 +5,7 @@ export interface ShortenRequest {
 
 export interface ClickEvent {
     urlId: number;
+    slug: string;
     ipAddress: string;
     country?: string;
     userAgent?: string;
