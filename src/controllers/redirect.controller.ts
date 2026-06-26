@@ -5,30 +5,40 @@ import { clickQueue } from '../config/queue';
 import { ClickEvent } from '../types';
 
 
-export async function handleRedirect(req: Request, res: Response, next: NextFunction) {
+export async function handleRedirect(req: Request, res: Response, next: NextFunction): Promise<void> {
 
     try {
-        const { slug } = req.params;
+        const slug = req.params.slug as string;
 
         let targetUrl: string;
         let targetId: number;
 
-        const cached = await getCachedUrl(slug as string);
+        const cached = await getCachedUrl(slug);
 
         if(cached) {
+            if(new Date(cached.expiresAt) < new Date()) {
+                res.status(410).json({ error: 'Gone', message: 'This link has expired' });
+                return;
+            }
             targetUrl = cached.longUrl;
             targetId = cached.urlId;
         } else {
-            const urlRecord = await getUrlBySlug(slug as string);
+            const urlRecord = await getUrlBySlug(slug);
 
             if(!urlRecord) {
-                return res.status(404).json({ message: 'URL not found' });
+                res.status(404).json({ message: 'URL not found' });
+                return;
+            }
+
+            if(urlRecord.expiresAT < new Date()) {
+                res.status(410).json({ error: 'Gone', message: 'This link has expired' });
+                return;
             }
 
             targetUrl = urlRecord.longUrl;
             targetId = urlRecord.id;
 
-            await setCachedUrl(slug as string, { longUrl: targetUrl, urlId: targetId });
+            await setCachedUrl(slug, { longUrl: targetUrl, urlId: targetId, expiresAt: urlRecord.expiresAT });
         }
 
         res.redirect(302, targetUrl);

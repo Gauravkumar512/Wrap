@@ -27,6 +27,8 @@ longUrl String
 createdAt DateTime @default(now())
 expiresAT DateTime
 
+clerkUserId String?
+
 userId Int?
 user User? @relation(fields: [userId], references: [id])
 

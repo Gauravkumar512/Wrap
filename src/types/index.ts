@@ -1,6 +1,6 @@
 export interface ShortenRequest {
     longUrl: string;
-    userId?: number;
+    clerkUserId?: string;
 }
 
 export interface ClickEvent {

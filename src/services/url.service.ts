@@ -1,4 +1,5 @@
 import prisma from "../config/db";
+import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { ShortenRequest } from "../types";
 import { setCachedUrl } from "./cache.service";
@@ -19,20 +20,20 @@ export async function createShortUrl(data: ShortenRequest): Promise<string> {
         data : {
             slug: generatedSlug,
             longUrl: data.longUrl,
-            userId: data.userId ?? null,
+            clerkUserId: data.clerkUserId ?? null,
             expiresAT: expiresAt,
     }})
 
-        await setCachedUrl(generatedSlug, { longUrl: data.longUrl, urlId: url.id });
+        await setCachedUrl(generatedSlug, { longUrl: data.longUrl, urlId: url.id, expiresAt: expiresAt });
 
         return generatedSlug;
     }
-        catch (error: any){
-            if(error.code === 'P2002'){
+        catch (error){
+            if(error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002'){
                 retries++;
-                continue; 
+                continue;
             }
-            throw error;    
+            throw error;
         } 
     }
     

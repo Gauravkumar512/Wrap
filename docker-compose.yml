@@ -9,8 +9,8 @@ services:
       - '5432:5432'
     environment:
       POSTGRES_DB: wrap_db
-      POSTGRES_USER: Gaurav
-      POSTGRES_PASSWORD: Ecxu8hmd
+      POSTGRES_USER: wrap_admin
+      POSTGRES_PASSWORD: wrap_password
     volumes:
       - pg_data:/var/lib/postgresql/data
 

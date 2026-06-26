@@ -5,6 +5,7 @@ const CACHE_TTL = 60 * 60 * 24; // 24 hrs
 export interface CachedUrlData {
   longUrl: string
   urlId: number
+  expiresAt: Date | string
 }
 
 export async function getCachedUrl(slug: string): Promise<CachedUrlData | null> {

@@ -1,10 +1,9 @@
+import 'dotenv/config';
+
 import { Worker, Job } from 'bullmq';
 import { ClickEvent } from '../types';
 import prisma from '../config/db';
-import dotenv from 'dotenv';    
 import { UAParser } from 'ua-parser-js';
-
-dotenv.config();
 
 const worker = new Worker<ClickEvent>('click-events', async(job: Job<ClickEvent>) => {
 
@@ -18,12 +17,11 @@ const worker = new Worker<ClickEvent>('click-events', async(job: Job<ClickEvent>
         data: {
             urlId,
             ipAddress: ipAddress ?? null,
-            userAgent: deviceType ,
+            userAgent: deviceType,
             referrer: referrer ?? null,
             country: country ?? null,
         }
     })
-    console.log(`Click recorded for urlId: ${urlId}`) // remove in production
 },
 {
     connection: {
@@ -38,6 +36,12 @@ worker.on('completed', (job) => {
 
 worker.on('failed', (job, err) => {
     console.error(`Job failed with id ${job!.id}:`, err.message);
+});
+
+process.on('SIGTERM', async () => {
+    await worker.close();
+    await prisma.$disconnect();
+    process.exit(0);
 });
 
 console.log('Click analytics worker is running...');

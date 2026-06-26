@@ -7,7 +7,7 @@ export const errorHandler = (err: Error , req: Request , res: Response , next: N
 
     res.status(500).json({
         error: 'Something went wrong',
-        message: err.message,
+        ...(process.env.NODE_ENV === 'development' && { message: err.message }),
     })
 
 }
