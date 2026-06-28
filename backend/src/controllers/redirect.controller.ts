@@ -23,7 +23,7 @@ export async function handleRedirect(req: Request, res: Response, next: NextFunc
         const cached = await getCachedUrl(slug);
 
         if(cached) {
-            if(new Date(cached.expiresAt) < new Date()) {
+            if(cached.expiresAt && new Date(cached.expiresAt) < new Date()) {
                 res.status(410).json({ error: 'Gone', message: 'This link has expired' });
                 return;
             }
@@ -37,7 +37,7 @@ export async function handleRedirect(req: Request, res: Response, next: NextFunc
                 return;
             }
 
-            if(urlRecord.expiresAT < new Date()) {
+            if(urlRecord.expiresAt && urlRecord.expiresAt < new Date()) {
                 res.status(410).json({ error: 'Gone', message: 'This link has expired' });
                 return;
             }
@@ -45,7 +45,7 @@ export async function handleRedirect(req: Request, res: Response, next: NextFunc
             targetUrl = urlRecord.longUrl;
             targetId = urlRecord.id;
 
-            await setCachedUrl(slug, { longUrl: targetUrl, urlId: targetId, expiresAt: urlRecord.expiresAT });
+            await setCachedUrl(slug, { longUrl: targetUrl, urlId: targetId, expiresAt: urlRecord.expiresAt });
         }
 
         res.redirect(302, targetUrl);

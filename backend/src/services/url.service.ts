@@ -21,7 +21,7 @@ export async function createShortUrl(data: ShortenRequest): Promise<string> {
             slug: generatedSlug,
             longUrl: data.longUrl,
             clerkUserId: data.clerkUserId ?? null,
-            expiresAT: expiresAt,
+            expiresAt: expiresAt,
     }})
 
         await setCachedUrl(generatedSlug, { longUrl: data.longUrl, urlId: url.id, expiresAt: expiresAt });
@@ -63,7 +63,7 @@ export async function getUserLinks(clerkUserId: string) {
         longUrl: url.longUrl,
         createdAt: url.createdAt.toISOString(),
         totalClicks: url._count.clicks,
-        expiresAt: url.expiresAT.toISOString(),
+        expiresAt: url.expiresAt?.toISOString() ?? null,
     }));
 }
 

@@ -14,7 +14,7 @@ datasource db {
 model User {
   id Int @id @default(autoincrement())
   email String @unique
-  passwordHash String 
+  passwordHash String?
   createdAt DateTime @default(now())
 
   urls Url[]
@@ -25,7 +25,7 @@ id Int @id @default(autoincrement())
 slug String @unique
 longUrl String
 createdAt DateTime @default(now())
-expiresAT DateTime
+expiresAt DateTime?
 
 clerkUserId String?
 
