@@ -8,7 +8,8 @@
     "dev:api": "nodemon --exec ts-node src/server.ts",
     "worker": "nodemon --exec ts-node src/workers/click.worker.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
+    "start:worker": "node dist/src/workers/click.worker.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -19,7 +20,6 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/ioredis": "^4.28.10",
     "@types/node": "^25.9.2",
     "@types/ua-parser-js": "^0.7.39",
     "concurrently": "^10.0.3",

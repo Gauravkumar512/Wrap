@@ -1,6 +1,31 @@
-version: '3.9'
+x-app-base: &app-base
+  build:
+    context: .
+    target: development
+  image: wrap-backend:dev          # built once, shared by api + worker
+  restart: unless-stopped
+  env_file:
+    - .env                         # base env (Clerk keys, FRONTEND_URL, PORT…)
+  environment:
+
+    DATABASE_URL: postgresql://wrap_admin:wrap_password@postgres:5432/wrap_db
+    REDIS_URL: redis://redis:6379
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+
+    CHOKIDAR_USEPOLLING: 'true'
+  volumes:
+    - ./src:/app/src                # mount source for hot reload
+    - ./prisma:/app/prisma          # mount schema/migrations
+    - /app/node_modules             # anonymous volume keeps container node_modules
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
 
 services:
+
   postgres:
     image: postgres:16
     container_name: wrap_postgres
@@ -25,12 +50,35 @@ services:
     container_name: wrap_redis
     restart: always
     ports:
+      # 63790 on the host maps to 6379 inside the container.
+      # Local .env keeps REDIS_PORT=63790 for scripts running outside Docker.
       - '63790:6379'
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  migrator:
+    <<: *app-base
+    container_name: wrap_migrator
+    restart: "no"
+    command: npx prisma migrate deploy
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *app-base
+    container_name: wrap_api
+    ports:
+      - '3000:3000'
+    command: npm run dev:api
+
+  worker:
+    <<: *app-base
+    container_name: wrap_worker
+    command: npm run worker
 
 volumes:
   pg_data:
