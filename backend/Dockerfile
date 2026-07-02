@@ -30,6 +30,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
+COPY start.sh ./
 
 RUN npm ci --omit=dev --ignore-scripts
 
@@ -38,4 +39,4 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
-CMD ["node", "dist/src/server.js"]
+CMD ["sh", "start.sh"]
