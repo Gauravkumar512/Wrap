@@ -10,8 +10,6 @@ x-app-base: &app-base
 
     DATABASE_URL: postgresql://wrap_admin:wrap_password@postgres:5432/wrap_db
     REDIS_URL: redis://redis:6379
-    REDIS_HOST: redis
-    REDIS_PORT: 6379
 
     CHOKIDAR_USEPOLLING: 'true'
   volumes:

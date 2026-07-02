@@ -2,7 +2,7 @@ import "dotenv/config";
 import app from './app';
 
 const REQUIRED_ENV = [
-    'DATABASE_URL', 'REDIS_URL', 'REDIS_HOST', 'REDIS_PORT',
+    'DATABASE_URL', 'REDIS_URL',
     'CLERK_SECRET_KEY', 'FRONTEND_URL',
 ];
 for (const key of REQUIRED_ENV) {

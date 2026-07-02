@@ -4,6 +4,7 @@ import { Worker, Job } from 'bullmq';
 import { ClickEvent } from '../types';
 import prisma from '../config/db';
 import redis from '../config/redis';
+import { bullConnection } from '../config/bullConnection';
 import { UAParser } from 'ua-parser-js';
 
 const worker = new Worker<ClickEvent>('click-events', async (job: Job<ClickEvent>) => {
@@ -26,10 +27,7 @@ const worker = new Worker<ClickEvent>('click-events', async (job: Job<ClickEvent
     await redis.del(`analytics:${slug}`);
 },
 {
-    connection: {
-        host: process.env.REDIS_HOST!,
-        port: parseInt(process.env.REDIS_PORT!),
-    },
+    connection: bullConnection,
 });
 
 worker.on('completed', (job) => {

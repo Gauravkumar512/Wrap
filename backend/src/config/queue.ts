@@ -1,11 +1,9 @@
 import { Queue } from "bullmq";
 import { ClickEvent } from "../types";
+import { bullConnection } from "./bullConnection";
 
-export const clickQueue = new Queue<ClickEvent>('click-events', { 
-    connection : {
-        host: process.env.REDIS_HOST!,
-        port: parseInt(process.env.REDIS_PORT!)
-    },
+export const clickQueue = new Queue<ClickEvent>('click-events', {
+    connection: bullConnection,
     defaultJobOptions: {
         attempts: 3,
         backoff: {
