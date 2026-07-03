@@ -1,6 +1,8 @@
-# Wrap — URL Shortener with Click Analytics
+# Wrap - URL Shortener with Click Analytics
 
-A production-grade URL shortener built to learn core backend engineering concepts — PostgreSQL, Redis, BullMQ, Docker, and TypeScript. Built project-first, concept-by-concept.
+A full-stack URL shortener with a React frontend and a production-grade Express backend. Built to learn core backend engineering concepts - PostgreSQL, Redis, BullMQ, Clerk auth, Docker, and TypeScript.
+
+**Stack:** Node.js · Express · TypeScript · Prisma · PostgreSQL · Redis · BullMQ · Clerk · React · Vite · Tailwind CSS · Recharts
 
 ---
 
@@ -8,247 +10,248 @@ A production-grade URL shortener built to learn core backend engineering concept
 
 - Shorten any long URL into a 6-character slug
 - Redirect users instantly via a Redis cache-aside pattern (~7ms)
+- Check expiry on every redirect - returns 410 Gone for expired links
 - Track click analytics asynchronously without blocking the redirect
 - Serve aggregated analytics (total clicks, by country, by device) with Redis caching (~5ms)
+- Clerk-based authentication - protected routes return 401 without a valid session token
+- Ownership checks on analytics - only the user who created a link can view its analytics
+- Rate limiting - 10 creates/min and 60 redirects/min per IP via express-rate-limit
+- Security headers on every response via Helmet
 
 ---
 
 ## Architecture
 
 ```
-POST /shorten     → Zod validation → nanoid slug → PostgreSQL → Redis warm → 201
-GET /:slug        → Redis HIT (~7ms) or MISS → PostgreSQL → Redis heal → 302
-                    → async: BullMQ job pushed after redirect
-                         ↓
-                    Worker picks up job → INSERT into clicks table
-GET /analytics/:slug → Redis HIT (5ms) or MISS → 4 parallel PG queries → Redis cache → 200
+POST /shorten          → requireAuth → scheme + SSRF check → Zod validation → nanoid slug → PostgreSQL → Redis warm → 201
+GET  /:slug            → rate limit (60/min) → slug validation → Redis HIT (~7ms) or MISS → PostgreSQL → expiry check → Redis heal → 302
+                         → async: BullMQ job pushed after redirect
+                              ↓
+                         Worker picks up job → INSERT into clicks table → bust analytics cache
+GET  /analytics/:slug  → requireAuth → slug validation → ownership check → Redis HIT (5ms) or MISS
+                         → 4 parallel PG queries → Redis cache → 200
+GET  /links            → requireAuth → PostgreSQL findMany (by clerkUserId) → 200
+DELETE /urls/:slug     → requireAuth → ownership check → Redis del (url + analytics) → PostgreSQL delete → 200
+GET  /health           → prisma.$queryRaw SELECT 1 + redis.ping() → 200 or 503
 ```
 
 ### Why Each Tool Was Chosen
 
-| Tool | Job | Why not something else |
-|---|---|---|
-| PostgreSQL | Source of truth — users, urls, clicks | Relational integrity between tables. Foreign keys, cascade deletes. SQL aggregations for analytics. |
-| Prisma | Type-safe DB queries + migrations | Auto-generates TypeScript types from schema. Migration files track schema changes. |
-| Redis | Cache + BullMQ backend | RAM-based (~0.1ms reads). Shared across all Node.js instances — unlike in-process memory. |
-| BullMQ | Async job queue for analytics | Decouples analytics write latency from redirect response. Worker failure never affects redirects. |
-| Zod | Input validation | Runtime validation + TypeScript type inference from one schema definition. |
-| nanoid | Slug generation | Random 6-char slug. No DB round-trip needed to generate. Collision handled via retry + P2002. |
-| Docker Compose | Local dev environment | PostgreSQL and Redis run as containers. No local installs needed. |
+| Tool               | Job                               | Why not something else                                                                                  |
+| ------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| PostgreSQL         | Source of truth - urls, clicks    | Relational integrity. Foreign keys, cascade deletes. SQL aggregations for analytics.                    |
+| Prisma             | Type-safe DB queries + migrations | Auto-generates TypeScript types from schema. Migration files track schema changes.                      |
+| Redis              | Cache + BullMQ backend            | RAM-based (~0.1ms reads). Shared across all Node.js instances - unlike in-process memory.               |
+| BullMQ             | Async job queue for analytics     | Decouples analytics write latency from redirect response. Worker failure never affects redirects.       |
+| Clerk              | Authentication                    | Managed auth - no password storage, no JWT signing, no session management to build.                     |
+| Helmet             | Security headers                  | Sets X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy in one call.                        |
+| express-rate-limit | Rate limiting                     | Prevents redirect enumeration and shorten abuse. In-memory store, Redis store ready for multi-instance. |
+| Zod                | Input validation                  | Runtime validation + TypeScript type inference from one schema definition.                              |
+| nanoid             | Slug generation                   | Random 6-char slug. No DB round-trip to generate. Collision handled via retry + P2002.                  |
+| Docker Compose     | Local dev environment             | PostgreSQL and Redis run as containers. No local installs needed.                                       |
+
+---
+
+## Monorepo Structure
+
+```
+Wrap/
+  backend/             ← Express API + BullMQ worker
+  frontend/            ← React + Vite app
+  README.md
+```
+
+### Backend
+
+```
+backend/
+  src/
+    config/
+      db.ts            ← Prisma client singleton
+      redis.ts         ← ioredis client + event listeners
+      queue.ts         ← BullMQ queue instance with retry config (3 attempts, exponential backoff)
+    controllers/
+      shorten.controller.ts    ← scheme blocklist + SSRF guard + slug creation
+      redirect.controller.ts   ← slug validation + cache-aside redirect
+      analytics.controller.ts  ← slug validation + per-link analytics
+      links.controller.ts      ← GET /links, DELETE /urls/:slug
+    services/
+      url.service.ts           ← createShortUrl, getUrlBySlug, getUserLinks, deleteLink
+      cache.service.ts         ← getCachedUrl, setCachedUrl, deleteCachedUrl, deleteAnalyticsCache (all Redis-safe with fallback)
+      analytics.service.ts     ← getAnalytic with Redis caching + ownership check
+    workers/
+      click.worker.ts          ← BullMQ worker, UA parsing, prisma.click.create, analytics cache bust
+    routes/
+      index.ts                 ← all routes with requireAuth() guards and rate limiters
+    middleware/
+      error.middleware.ts      ← global error handler (hides stack in production)
+    schemas/
+      shorten.schema.ts        ← Zod schema for POST /shorten
+    types/
+      index.ts                 ← ShortenRequest, ClickEvent interfaces
+    app.ts                     ← Express setup, Helmet, clerkMiddleware, CORS, routes, deep /health
+    server.ts                  ← env var validation at boot, app.listen
+  prisma/
+    schema.prisma              ← single source of truth for DB structure
+    migrations/                ← auto-generated SQL migration files
+  docker-compose.yml           ← postgres + redis containers with healthchecks
+```
+
+### Frontend
+
+```
+frontend/
+  src/
+    pages/
+      Landing.tsx              ← hero, features - shows "Go to Dashboard" when signed in
+      Dashboard.tsx            ← stats cards + links table + create modal
+      Analytics.tsx            ← per-slug analytics with charts and recent clicks
+      AnalyticsOverview.tsx    ← /analytics overview: total clicks, links ranked by clicks
+    components/
+      layout/
+        Sidebar.tsx            ← fixed sidebar with Dashboard + Analytics nav, Clerk UserButton
+        Navbar.tsx             ← landing navbar with SignInButton
+      links/
+        LinksTable.tsx         ← table with copy, open, analytics, delete actions
+        CreateLinkModal.tsx    ← modal with success state showing the short URL
+        DeleteConfirmDialog.tsx
+      analytics/
+        StatsCard.tsx          ← reusable metric card
+        DeviceChart.tsx        ← donut chart (Recharts)
+        CountryChart.tsx       ← horizontal bar chart (Recharts)
+        RecentClicksTable.tsx  ← recent clicks (time, country, device, referrer)
+    hooks/
+      useLinks.ts              ← fetch, create, delete links with refetch
+      useAnalytics.ts          ← fetch analytics for a slug
+    lib/
+      api.ts                   ← all API calls with fresh Clerk Bearer token per request
+      utils.ts                 ← cn, truncateUrl, formatRelativeTime, copyToClipboard (with execCommand fallback), buildShortUrl
+  public/
+    favicon.svg                ← branded favicon
+  index.html                   ← CSP meta tag, favicon link
+  main.tsx                     ← StrictMode + React Error Boundary
+```
 
 ---
 
 ## Database Schema
 
-### users
-| Column | Type | Constraint | Note |
-|---|---|---|---|
-| id | SERIAL | PRIMARY KEY | Auto-increment |
-| email | VARCHAR(255) | UNIQUE NOT NULL | |
-| passwordHash | TEXT | NOT NULL | bcrypt hash — never store plain text |
-| createdAt | TIMESTAMPTZ | DEFAULT NOW() | |
-
 ### urls
-| Column | Type | Constraint | Note |
-|---|---|---|---|
-| id | SERIAL | PRIMARY KEY | Auto-increment |
-| slug | VARCHAR(10) | UNIQUE NOT NULL | Indexed — fast lookup on redirect |
-| longUrl | TEXT | NOT NULL | Original URL |
-| userId | INTEGER | FK → users(id), NULLABLE | Null for anonymous links |
-| expiresAT | TIMESTAMPTZ | NOT NULL | 30-day expiry set on creation |
-| createdAt | TIMESTAMPTZ | DEFAULT NOW() | |
+
+| Column      | Type        | Constraint      | Note                              |
+| ----------- | ----------- | --------------- | --------------------------------- |
+| id          | SERIAL      | PRIMARY KEY     | Auto-increment                    |
+| slug        | VARCHAR     | UNIQUE NOT NULL | Indexed - fast lookup on redirect |
+| longUrl     | TEXT        | NOT NULL        | Original URL                      |
+| clerkUserId | TEXT        | NULLABLE        | Clerk user ID string (not a FK)   |
+| expiresAT   | TIMESTAMPTZ | NOT NULL        | 30-day expiry set on creation     |
+| createdAt   | TIMESTAMPTZ | DEFAULT NOW()   |                                   |
 
 ### clicks (analytics)
-| Column | Type | Constraint | Note |
-|---|---|---|---|
-| id | BIGINT | PRIMARY KEY | BIGSERIAL — this table grows large |
-| urlId | INTEGER | FK → urls(id) ON DELETE CASCADE | Cascade: delete URL → all clicks deleted |
-| clickedAt | TIMESTAMPTZ | DEFAULT NOW() | Indexed (composite) |
-| ipAddress | TEXT | NULLABLE | |
-| userAgent | TEXT | NULLABLE | Stores parsed device type after UA parsing |
-| country | TEXT | NULLABLE | From cf-ipcountry header in production |
-| referrer | TEXT | NULLABLE | |
+
+| Column    | Type        | Constraint                      | Note                                           |
+| --------- | ----------- | ------------------------------- | ---------------------------------------------- |
+| id        | BIGINT      | PRIMARY KEY                     | BIGSERIAL - this table grows large             |
+| urlId     | INTEGER     | FK → urls(id) ON DELETE CASCADE | Cascade: delete URL → all clicks deleted       |
+| clickedAt | TIMESTAMPTZ | DEFAULT NOW()                   | Indexed (composite)                            |
+| ipAddress | TEXT        | NULLABLE                        | Stored in DB only - not returned to clients    |
+| userAgent | TEXT        | NULLABLE                        | Parsed device type (mobile / tablet / desktop) |
+| country   | TEXT        | NULLABLE                        | From cf-ipcountry header in production         |
+| referrer  | TEXT        | NULLABLE                        |                                                |
 
 ### Indexes
-```sql
--- Auto-created by @unique on slug
-CREATE UNIQUE INDEX ON "Url"("slug");
 
--- Manually added composite index for analytics queries
+```sql
+CREATE UNIQUE INDEX ON "Url"("slug");
 CREATE INDEX "Click_urlId_clickedAt_idx" ON "Click"("urlId", "clickedAt" DESC);
 ```
 
-**Why the composite index?** Every analytics query filters by `urlId` and sorts by `clickedAt DESC`. Without the index, PostgreSQL scans the entire clicks table and sorts in memory. With it, rows are pre-grouped by `urlId` and pre-sorted — no scan, no sort.
+**Why the composite index?** Every analytics query filters by `urlId` and sorts by `clickedAt DESC`. Without it, PostgreSQL scans the entire clicks table and sorts in memory. With it, rows are pre-grouped and pre-sorted - no scan, no sort.
 
 ---
 
-## Key Concepts Learned
+## Key Concepts
 
 ### 1. Cache-Aside Pattern (Redis)
-Check cache first. On HIT → serve from Redis. On MISS → query PostgreSQL, write result back to Redis, serve. Cache heals itself on miss.
+
+Check cache first. On HIT → serve from Redis. On MISS → query PostgreSQL, write result back to Redis, serve. Redis failures fall through to PostgreSQL gracefully - no 500s on Redis downtime.
 
 ```
 Redis GET url:slug
-  ├── HIT  → redirect (0.1ms RAM read)
-  └── MISS → PostgreSQL → Redis SET url:slug (re-warm) → redirect
+  ├── HIT  → expiry check → redirect (~7ms)
+  └── MISS → PostgreSQL → Redis SET url:slug (re-warm) → expiry check → redirect
 ```
 
-**Key insight:** Redis must live outside Node.js processes. In-process memory only works for a single instance. Redis is shared across all instances — essential for horizontal scaling.
-
-**Key namespacing:** Keys are stored as `url:slug`, `analytics:slug`, not raw values. Prevents collisions across features in the flat Redis keyspace.
+Keys are namespaced: `url:{slug}` for redirects, `analytics:{slug}` for analytics. Prevents collisions in the flat Redis keyspace.
 
 ### 2. Async Analytics with BullMQ
-After `res.redirect()` is sent — the user is already gone — the API pushes a job to BullMQ. A separate worker process picks it up and writes to the clicks table.
+
+After `res.redirect()` is sent the user is already gone. The API then pushes a job to BullMQ. A separate worker process picks it up, writes to the clicks table, then busts the analytics cache so the next view reflects the new click.
 
 ```typescript
-res.redirect(302, cachedUrl)      // user is gone
-void clickQueue.add('click', ...) // fires after, not awaited intentionally
+res.redirect(302, targetUrl)                    // user is gone
+clickQueue.add('click-events', {...}).catch(...)  // fires after, never awaited
+// worker: INSERT click → redis.del(`analytics:${slug}`)
 ```
 
-`void` tells TypeScript: "I know this is a Promise and I'm deliberately not awaiting it." The event loop keeps running after the response is sent. The job is pushed asynchronously.
+**Why separate process?** If the worker crashes, redirects keep working. Worker failures are isolated from the hot path. `npm run dev` starts both the API and worker together via `concurrently`.
 
-**Why separate process?** If the worker crashes, redirects keep working. Worker failures are isolated from the hot path.
+### 3. Expiry Enforcement (410 Gone)
 
-### 3. BullMQ Retry with Exponential Backoff
+`expiresAT` is stored in PostgreSQL and cached in Redis alongside `longUrl`. Both the cache hit and the DB miss path check it:
+
 ```typescript
-defaultJobOptions: {
-  attempts: 3,
-  backoff: {
-    type: 'exponential',
-    delay: 1000,   // 1s → 2s → 4s
-  },
-  removeOnComplete: true,
-  removeOnFail: false,  // keep failed jobs for inspection
+if (new Date(cached.expiresAt) < new Date()) {
+  res.status(410).json({ error: 'Gone', message: 'This link has expired' });
+  return;
 }
 ```
 
-- `attempts: 3` → job retried exactly 3 times on failure
-- `exponential` → delay doubles each retry (1s, 2s, 4s)
-- `removeOnFail: false` → failed jobs stay in Redis as dead-letter jobs
+Returns HTTP **410 Gone** (not 404) - signals the resource existed but is permanently gone.
 
-**Why exponential?** Flat retries hammer a struggling service. Exponential backoff gives the system time to recover between attempts.
+### 4. Ownership Checks
 
-### 4. Foreign Key + ON DELETE CASCADE
-```prisma
-url Url @relation(fields: [urlId], references: [id], onDelete: Cascade)
-```
-
-If a URL row is deleted, all its Click rows are automatically deleted. Without this, you'd have orphaned click records pointing to non-existent URLs — broken data.
-
-### 5. Promise.all for Parallel Queries
-Analytics queries are independent — none depends on another's result. Run them in parallel:
+Analytics are private. `getAnalytic()` compares the link's `clerkUserId` against the requesting user's Clerk ID and returns a `'forbidden'` sentinel - not a thrown error - for clean 403 handling in the controller:
 
 ```typescript
-// Sequential — total time = sum of all queries (bad)
-const a = await query1()
-const b = await query2()
-
-// Parallel — total time = slowest single query (good)
-const [a, b] = await Promise.all([query1(), query2()])
+if (url.clerkUserId !== clerkUserId) return 'forbidden'
+// controller:
+if (analyticData === 'forbidden') { res.status(403)... }
 ```
 
-### 6. nanoid vs Base62 — The Tradeoff
-| | nanoid | Base62 |
-|---|---|---|
-| How | Random 6-char string | Encode PostgreSQL serial ID |
-| DB calls | 1 (insert only) | 2 (insert + update with slug) |
-| Uniqueness | Probabilistic (collision → retry) | Deterministic (guaranteed by PK) |
-| Interview answer | Simpler, fine at our scale | Better at high write throughput — no retry loop |
+`clerkUserId` is stored inside the analytics cache (for ownership checks on cache hits) but stripped from the API response. Raw IP addresses are stored in the DB but never returned to the frontend.
 
-### 7. HTTP 302 vs 301
-- **301 Permanent** → browser caches redirect forever. Subsequent clicks bypass your server entirely. Analytics break.
-- **302 Temporary** → browser always checks back. Every click hits your server. Analytics work correctly.
+### 5. Promise.all for Parallel Queries
+
+Analytics queries are independent. Run them in parallel:
+
+```typescript
+const [totalClicks, grpCountry, grpDevice, recentClicks] = await Promise.all([
+  prisma.click.count({ where: { urlId: url.id } }),
+  prisma.click.groupBy({ by: ['country'], ... }),
+  prisma.click.groupBy({ by: ['userAgent'], ... }),
+  prisma.click.findMany({ orderBy: { clickedAt: 'desc' }, take: 10, ... }),
+])
+```
+
+Total time = slowest single query, not the sum.
+
+### 6. HTTP 302 vs 301
+
+- **301 Permanent** → browser caches redirect forever. Subsequent clicks bypass your server. Analytics break.
+- **302 Temporary** → browser always checks back. Every click hits your server. Analytics work.
 
 Always use **302** when you need to track clicks.
 
-### 8. Analytics Caching (30s TTL)
-Computing GROUP BY across millions of clicks on every dashboard refresh is wasteful. Cache the computed result:
+### 7. Error Middleware Security
 
-```
-First request  → PostgreSQL (4 queries, 15-80ms) → cache result in Redis
-Next 30 seconds → Redis HIT (5ms, zero DB queries)
-```
-
-Tradeoff: dashboard is stale by at most 30 seconds. Acceptable for analytics. Reduces DB queries by ~98% under concurrent load.
-
-### 9. Global Error Handler
-Four-parameter Express middleware catches all errors passed via `next(error)`:
+Stack traces are logged server-side, never sent to clients. In production, the error response body contains only a generic message:
 
 ```typescript
-app.use(errorHandler) // must be registered AFTER all routes
-```
-
-Stack traces are logged server-side, never exposed to the client. Security baseline for any production API.
-
----
-
-## Request Flows
-
-### POST /shorten
-```
-1. Zod validates { longUrl, userId? }
-2. nanoid generates 6-char slug
-3. Prisma inserts into Url table (retry on P2002 collision, max 3 attempts)
-4. Redis SET url:slug → { longUrl, urlId } with 24h TTL
-5. Return { shortUrl, slug }
-```
-
-### GET /:slug
-```
-1. Redis GET url:slug
-   ├── HIT  → res.redirect(302, longUrl) → push BullMQ job → return
-   └── MISS → Prisma findUnique by slug
-               ├── null → 404
-               └── found → Redis SET (re-warm) → res.redirect(302) → push BullMQ job
-2. BullMQ worker (separate process):
-   → UAParser parses userAgent → prisma.click.create()
-```
-
-### GET /analytics/:slug
-```
-1. Redis GET analytics:{slug}
-   ├── HIT  → return cached result (5ms)
-   └── MISS → Promise.all([count, groupByCountry, groupByDevice, recentClicks])
-               → Redis SET analytics:{slug} with 30s TTL
-               → return result
-```
-
----
-
-## Project Structure
-
-```
-src/
-  config/
-    db.ts          ← Prisma client singleton
-    redis.ts       ← ioredis client + event listeners
-    queue.ts       ← BullMQ queue instance with retry config
-  controllers/
-    shorten.controller.ts
-    redirect.controller.ts
-    analytics.controller.ts
-  services/
-    url.service.ts        ← createShortUrl, getUrlBySlug
-    cache.service.ts      ← getCachedUrl, setCachedUrl, deleteCachedUrl
-    analytics.service.ts  ← getUrlAnalytics with Redis caching
-  workers/
-    click.worker.ts       ← BullMQ worker, UA parsing, prisma.click.create
-  routes/
-    index.ts              ← POST /shorten, GET /analytics/:slug, GET /:slug
-  middleware/
-    error.middleware.ts   ← global error handler
-  schemas/
-    shorten.schema.ts     ← Zod schema + inferred ShortenRequest type
-  types/
-    index.ts              ← ClickEvent interface
-  utils/
-    base62.ts             ← base62 encode utility (reference, nanoid used instead)
-  app.ts                  ← Express setup, middleware, routes
-  server.ts               ← entry point
-prisma/
-  schema.prisma           ← single source of truth for DB structure
-  migrations/             ← auto-generated SQL migration files
-docker-compose.yml        ← postgres + redis containers
+res.status(500).json({
+  error: 'Something went wrong',
+  ...(process.env.NODE_ENV === 'development' && { message: err.message }),
+});
 ```
 
 ---
@@ -257,80 +260,152 @@ docker-compose.yml        ← postgres + redis containers
 
 **Prerequisites:** Docker Desktop, Node.js 20+
 
+### Backend
+
 ```bash
+cd backend
+
 # 1. Install dependencies
 npm install
 
-# 2. Start PostgreSQL and Redis containers
+# 2. Copy env and fill in your Clerk keys
+cp .env.example .env
+
+# 3. Start PostgreSQL and Redis
 docker compose up -d
 
-# 3. Run migrations
+# 4. Run migrations
 npx prisma migrate dev
 
-# 4. Start API server (Terminal 1)
+# 5. Start API server + BullMQ worker together
 npm run dev
-
-# 5. Start BullMQ worker (Terminal 2)
-npm run worker
 ```
 
-**Environment variables (.env):**
+`npm run dev` uses `concurrently` to run both the Express API (`[api]`) and the BullMQ worker (`[worker]`) in one terminal with colour-coded output. Use `npm run dev:api` or `npm run worker` to run them separately.
+
+**`backend/.env`:**
+
 ```env
 PORT=3000
 DATABASE_URL="postgresql://wrap_admin:wrap_password@localhost:5432/wrap_db"
 REDIS_URL="redis://localhost:63790"
-REDIS_HOST="localhost"
-REDIS_PORT=63790
+NODE_ENV="development"
+FRONTEND_URL="http://localhost:5173"
+CLERK_PUBLISHABLE_KEY="pk_test_..."
+CLERK_SECRET_KEY="sk_test_..."
+```
+
+### Frontend
+
+```bash
+cd frontend
+
+# 1. Install dependencies
+npm install
+
+# 2. Copy env and fill in your Clerk publishable key
+cp .env.example .env
+
+# 3. Start dev server
+npm run dev
+```
+
+**`frontend/.env`:**
+
+```env
+VITE_API_URL=http://localhost:3000
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 ```
 
 ---
 
 ## API Reference
 
+All endpoints except `GET /:slug` and `GET /health` require a valid Clerk session token:
+
+```
+Authorization: Bearer <clerk_session_token>
+```
+
 ### POST /shorten
+
 ```json
-Request:  { "longUrl": "https://github.com/gaurav/project", "userId": 1 }
+Request:  { "longUrl": "https://github.com/gaurav/project" }
 Response: { "message": "Short URL created successfully", "shortUrl": "http://localhost:3000/xK9mP2", "slug": "xK9mP2" }
+Errors:   400 if scheme is not http/https, 400 if URL resolves to a private address, 429 if rate limit exceeded
 ```
 
 ### GET /:slug
+
 ```
 Response: 302 redirect to longUrl
-Header:   Location: https://github.com/gaurav/project
+          410 Gone if the link has expired
+          404 if the slug does not exist or has an invalid format
+          429 if rate limit exceeded (60 req/min per IP)
+```
+
+### GET /links
+
+```json
+Response: {
+  "links": [
+    {
+      "id": 1,
+      "slug": "xK9mP2",
+      "longUrl": "https://github.com/gaurav/project",
+      "createdAt": "2026-06-26T07:00:00.000Z",
+      "totalClicks": 14,
+      "expiresAt": "2026-07-26T07:00:00.000Z"
+    }
+  ]
+}
+```
+
+### DELETE /urls/:slug
+
+```json
+Response: { "message": "Link deleted successfully" }
+          403 if the link belongs to another user
+          404 if the slug does not exist
 ```
 
 ### GET /analytics/:slug
+
 ```json
 Response: {
   "slug": "xK9mP2",
   "longUrl": "https://github.com/gaurav/project",
   "totalClicks": 14,
   "clicksByCountry": [{ "country": "IN", "count": 10 }],
-  "clicksByDevice": [{ "device": "desktop", "count": 14 }],
-  "recentClicks": [{ "clickedAt": "...", "ipAddress": "...", ... }]
+  "clicksByDevice": [{ "device": "mobile", "count": 8 }],
+  "recentClicks": [
+    { "clickedAt": "2026-06-26T10:00:00.000Z", "country": "IN", "userAgent": "mobile", "referrer": null }
+  ]
 }
 ```
 
 ### GET /health
+
 ```json
-Response: { "message": "Server is healthy" }
+Response: { "status": "ok", "db": "ok", "redis": "ok" }
+          503 if either dependency is unreachable
 ```
 
 ---
 
 ## Performance Numbers (Local Dev)
 
-| Endpoint | Cold (cache miss) | Warm (cache hit) |
-|---|---|---|
-| GET /:slug | ~50ms | ~7ms |
-| GET /analytics/:slug | 15–80ms | ~5ms |
+| Endpoint             | Cold (cache miss) | Warm (cache hit) |
+| -------------------- | ----------------- | ---------------- |
+| GET /:slug           | ~50ms             | ~7ms             |
+| GET /analytics/:slug | 15–80ms           | ~5ms             |
 
 ---
 
-## What's Not Built Yet (Next Steps)
+## What's Not Built Yet
 
-- **Auth** — JWT + Redis session for protected routes (Project 2)
-- **Graceful shutdown** — worker finishes current job before process exits
-- **Link expiry enforcement** — check `expiresAt` on redirect
-- **Rate limiting** — Redis sliding window to prevent redirect abuse
-- **Containerise the API** — add Node.js service to docker-compose.yml for full Docker deployment
+- **Custom slugs** - let users choose their own short code
+- **Link expiry UI** - show expiry countdown in the dashboard
+- **Containerise the API** - add Node.js + worker services to docker-compose.yml for full Docker deployment
+- **Structured logging** - replace console.log/error with pino or winston for JSON log output
+- **DNS-resolution SSRF guard** - the current SSRF check blocks direct private IPs and known internal hostnames; a full guard would resolve hostnames via DNS and check the resulting IP against private ranges
