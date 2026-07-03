@@ -7,7 +7,7 @@ import {
   Legend,
 } from 'recharts'
 
-const COLORS = ['#C2410C', '#EA580C', '#FB923C', '#D1D5DB', '#9CA3AF']
+const COLORS = ['#0A0A0A', '#3A3A3A', '#6B6B6B', '#9A9A9A', '#D1D1D1']
 
 interface Props {
   data: { device: string | null; count: number }[]
