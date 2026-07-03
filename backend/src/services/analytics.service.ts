@@ -55,6 +55,7 @@ export async function getAnalytic(slug: string, clerkUserId: string) {
                 country: true,
                 userAgent: true,
                 referrer: true,
+                ipAddress: true,
             },
         }),
     ])

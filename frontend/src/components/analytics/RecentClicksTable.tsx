@@ -5,6 +5,7 @@ interface Click {
   country: string | null
   userAgent: string | null
   referrer: string | null
+  ipAddress: string | null
 }
 
 interface Props {
@@ -46,7 +47,7 @@ export function RecentClicksTable({ clicks }: Props) {
       <table className="w-full text-sm">
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border-light)' }}>
-            {['Time', 'Country', 'Device', 'Referrer'].map(h => (
+            {['Time', 'Country', 'Device', 'Referrer', 'IP Address'].map(h => (
               <th
                 key={h}
                 className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide"
@@ -75,6 +76,9 @@ export function RecentClicksTable({ clicks }: Props) {
               </td>
               <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 {parseReferrer(click.referrer)}
+              </td>
+              <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {click.ipAddress || '—'}
               </td>
             </tr>
           ))}

@@ -28,6 +28,7 @@ export interface AnalyticsData {
     country: string | null
     userAgent: string | null
     referrer: string | null
+    ipAddress: string | null
   }[]
 }
 
