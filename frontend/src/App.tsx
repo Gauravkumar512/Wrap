@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ClerkProvider, useAuth } from '@clerk/clerk-react'
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import Analytics from './pages/Analytics'
@@ -67,6 +68,7 @@ export default function App() {
       <BrowserRouter>
         <AppRoutes />
       </BrowserRouter>
+      <VercelAnalytics />
     </ClerkProvider>
   )
 }

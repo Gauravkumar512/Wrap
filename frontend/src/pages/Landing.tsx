@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, useAuth } from '@clerk/clerk-react';
 import { ArrowRight, Github, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
@@ -58,10 +58,11 @@ const proTier = {
 };
 
 export default function Landing() {
+  const { isLoaded } = useAuth();
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#FFFFFF' }}>
       <Navbar />
-
+      <Reveal>
       <section
         className="flex flex-col items-center text-center px-8"
         style={{ paddingTop: '180px', paddingBottom: '80px' }}
@@ -93,46 +94,56 @@ export default function Landing() {
           Paste a URL. Get a clean short link. Watch every click roll in with country, device, and referrer data.
         </p>
 
-        <div className="flex items-center gap-4 mt-10 flex-wrap justify-center">
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button
-                className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-150"
-                style={{ background: '#0A0A0A', color: '#FFFFFF' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#333333')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#0A0A0A')}
-              >
-                Get started free
-                <ArrowRight size={15} />
-              </button>
-            </SignInButton>
-            <a
-              href="#product"
-              className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-150"
-              style={{
-                background: '#FFFFFF',
-                color: '#0A0A0A',
-                border: '1px solid #EAEAEA',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#0A0A0A')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#EAEAEA')}
-            >
-              See how it works
-            </a>
-          </SignedOut>
-          <SignedIn>
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-150"
-              style={{ background: '#0A0A0A', color: '#FFFFFF' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#333333')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#0A0A0A')}
-            >
-              Go to Dashboard
-              <ArrowRight size={15} />
-            </Link>
-          </SignedIn>
+        <div className="flex items-center gap-4 mt-10 flex-wrap justify-center" style={{ minHeight: '52px' }}>
+          {!isLoaded ? (
+            <>
+              <span className="animate-pulse" style={{ width: 168, height: 52, borderRadius: 999, background: '#F0F0F0' }} />
+              <span className="animate-pulse" style={{ width: 168, height: 52, borderRadius: 999, background: '#F0F0F0' }} />
+            </>
+          ) : (
+            <>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button
+                    className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-150"
+                    style={{ background: '#0A0A0A', color: '#FFFFFF' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#333333')}
+                    onMouseLeave={e => (e.currentTarget.style.background = '#0A0A0A')}
+                  >
+                    Get started free
+                    <ArrowRight size={15} />
+                  </button>
+                </SignInButton>
+                <a
+                  href="#product"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-150"
+                  style={{
+                    background: '#FFFFFF',
+                    color: '#0A0A0A',
+                    border: '1px solid #EAEAEA',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = '#0A0A0A')}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#EAEAEA')}
+                >
+                  See how it works
+                </a>
+              </SignedOut>
+              <SignedIn>
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-150"
+                  style={{ background: '#0A0A0A', color: '#FFFFFF' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#333333')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '#0A0A0A')}
+                >
+                  Go to Dashboard
+                  <ArrowRight size={15} />
+                </Link>
+              </SignedIn>
+            </>
+          )}
         </div>
+        
 
         <div
           className="w-full max-w-5xl mx-auto text-left"
@@ -174,6 +185,7 @@ export default function Landing() {
           <DashboardDemo />
         </div>
       </section>
+      </Reveal>
 
       <Reveal>
       <section
@@ -414,37 +426,43 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button
-                    className="w-full py-3 rounded-full text-sm font-semibold transition-all duration-150"
-                    style={{
-                      background: '#FFFFFF',
-                      color: '#0A0A0A',
-                      border: '1px solid #EAEAEA',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = '#0A0A0A')}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = '#EAEAEA')}
-                  >
-                    {freeTier.cta}
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <Link
-                  to="/dashboard"
-                  className="w-full py-3 rounded-full text-sm font-semibold text-center transition-all duration-150 block"
-                  style={{
-                    background: '#FFFFFF',
-                    color: '#0A0A0A',
-                    border: '1px solid #EAEAEA',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = '#0A0A0A')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#EAEAEA')}
-                >
-                  Go to Dashboard
-                </Link>
-              </SignedIn>
+              {!isLoaded ? (
+                <span className="w-full animate-pulse block" style={{ height: '44px', borderRadius: 999, background: '#F0F0F0' }} />
+              ) : (
+                <>
+                  <SignedOut>
+                    <SignInButton mode="modal">
+                      <button
+                        className="w-full py-3 rounded-full text-sm font-semibold transition-all duration-150"
+                        style={{
+                          background: '#FFFFFF',
+                          color: '#0A0A0A',
+                          border: '1px solid #EAEAEA',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.borderColor = '#0A0A0A')}
+                        onMouseLeave={e => (e.currentTarget.style.borderColor = '#EAEAEA')}
+                      >
+                        {freeTier.cta}
+                      </button>
+                    </SignInButton>
+                  </SignedOut>
+                  <SignedIn>
+                    <Link
+                      to="/dashboard"
+                      className="w-full py-3 rounded-full text-sm font-semibold text-center transition-all duration-150 block"
+                      style={{
+                        background: '#FFFFFF',
+                        color: '#0A0A0A',
+                        border: '1px solid #EAEAEA',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = '#0A0A0A')}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = '#EAEAEA')}
+                    >
+                      Go to Dashboard
+                    </Link>
+                  </SignedIn>
+                </>
+              )}
             </div>
 
             {/* Pro tier */}
