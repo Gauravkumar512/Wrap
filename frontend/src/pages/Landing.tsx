@@ -3,6 +3,7 @@ import { ArrowRight, Github, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { DashboardDemo } from '../components/landing/DashboardDemo';
+import { Reveal } from '../components/common/Reveal';
 
 const steps = [
   {
@@ -174,6 +175,7 @@ export default function Landing() {
         </div>
       </section>
 
+      <Reveal>
       <section
         id="about"
         style={{
@@ -265,7 +267,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section
         id="product"
         style={{ paddingTop: '100px', paddingBottom: '100px' }}
@@ -347,7 +351,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section
         id="pricing"
         style={{ paddingTop: '100px', paddingBottom: '100px' }}
@@ -531,7 +537,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section
         style={{
           background: '#0A0A0A',
@@ -660,6 +668,7 @@ export default function Landing() {
           </div>
         </footer>
       </section>
+      </Reveal>
     </div>
   );
 }

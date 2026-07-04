@@ -433,7 +433,7 @@ export function DashboardDemo() {
       if (!abort) setScreen('links');
       
       // Wait for Links view to render and numbers to count up
-      await new Promise(r => setTimeout(r, 4500));
+      await new Promise(r => setTimeout(r, 3500));
       if (abort) return;
       
       // 2. Move to Analytics tab
@@ -452,7 +452,7 @@ export function DashboardDemo() {
       if (!abort) setScreen('analytics');
       
       // Wait for Analytics numbers to count up
-      await new Promise(r => setTimeout(r, 4000));
+      await new Promise(r => setTimeout(r, 3500));
       if (abort) return;
       
       // Move away and fade out
