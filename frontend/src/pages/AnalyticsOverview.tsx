@@ -52,8 +52,8 @@ export default function AnalyticsOverview() {
     <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <Sidebar />
 
-      <main className="flex-1 pl-[220px]">
-        <div className="max-w-4xl mx-auto px-8 py-8 flex flex-col gap-8">
+      <main className="flex-1 md:pl-[220px] pt-14 md:pt-0">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6 md:gap-8">
 
           {/* Header */}
           <div>
@@ -66,7 +66,7 @@ export default function AnalyticsOverview() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <StatsCard
               label="Total Clicks"
               value={loading ? '—' : totalClicks.toLocaleString()}
@@ -106,7 +106,7 @@ export default function AnalyticsOverview() {
             }}
           >
             <div
-              className="px-6 py-4 flex items-center justify-between"
+              className="px-4 sm:px-6 py-4 flex items-center justify-between"
               style={{ borderBottom: '1px solid var(--border-light)' }}
             >
               <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export default function AnalyticsOverview() {
               )}
             </div>
 
-            <div className="px-6 py-2">
+            <div className="px-4 sm:px-6 py-2">
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
               ) : sorted.length === 0 ? (
@@ -143,7 +143,7 @@ export default function AnalyticsOverview() {
                 sorted.map((link, i) => (
                   <div
                     key={link.id}
-                    className="flex items-center gap-4 py-3.5"
+                    className="flex items-center gap-2 sm:gap-4 py-3.5"
                     style={{
                       borderBottom: i < sorted.length - 1 ? '1px solid var(--border-light)' : 'none',
                     }}
@@ -157,7 +157,7 @@ export default function AnalyticsOverview() {
                     </span>
 
                     {/* Slug + URL */}
-                    <div className="flex flex-col min-w-0 w-[180px] flex-shrink-0">
+                    <div className="flex flex-col min-w-0 w-[96px] sm:w-[180px] flex-shrink-0">
                       <span
                         className="font-mono text-xs font-semibold truncate"
                         style={{ color: 'var(--accent)' }}
@@ -165,7 +165,7 @@ export default function AnalyticsOverview() {
                         /{link.slug}
                       </span>
                       <span
-                        className="text-xs truncate mt-0.5"
+                        className="text-xs truncate mt-0.5 hidden sm:block"
                         style={{ color: 'var(--text-muted)' }}
                       >
                         {truncateUrl(link.longUrl, 30)}
@@ -195,7 +195,7 @@ export default function AnalyticsOverview() {
           {/* Empty CTA */}
           {!loading && links.length > 0 && totalClicks === 0 && (
             <div
-              className="rounded-2xl px-6 py-8 text-center"
+              className="rounded-2xl px-4 sm:px-6 py-8 text-center"
               style={{
                 background: 'var(--accent-light)',
                 border: '1px solid var(--accent-border)',
@@ -204,7 +204,7 @@ export default function AnalyticsOverview() {
               <p className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
                 Share your short links to start seeing click data here.
               </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-xs mt-1 break-all" style={{ color: 'var(--text-muted)' }}>
                 Every visit to{' '}
                 <span className="font-mono">
                   {API_URL}/{sorted[0]?.slug}

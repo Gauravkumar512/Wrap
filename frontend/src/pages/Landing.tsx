@@ -2,7 +2,7 @@ import { SignedIn, SignedOut, SignInButton, useAuth } from '@clerk/clerk-react';
 import { ArrowRight, Github, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { DashboardDemo } from '../components/landing/DashboardDemo';
+import { ScaledDashboardDemo } from '../components/landing/ScaledDashboardDemo';
 import { Reveal } from '../components/common/Reveal';
 
 const steps = [
@@ -64,12 +64,11 @@ export default function Landing() {
       <Navbar />
       <Reveal>
       <section
-        className="flex flex-col items-center text-center px-8"
-        style={{ paddingTop: '180px', paddingBottom: '80px' }}
+        className="flex flex-col items-center text-center px-4 sm:px-6 md:px-8 pt-28 sm:pt-36 md:pt-[180px] pb-12 md:pb-20"
       >
         <h1
           style={{
-            fontSize: 'clamp(2.5rem, 5.5vw, 4rem)',
+            fontSize: 'clamp(2.25rem, 5.5vw, 4rem)',
             fontWeight: 800,
             letterSpacing: '-0.035em',
             lineHeight: 1.08,
@@ -103,7 +102,7 @@ export default function Landing() {
           ) : (
             <>
               <SignedOut>
-                <SignInButton mode="modal">
+                <SignInButton mode="modal" forceRedirectUrl="/dashboard">
                   <button
                     className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-150"
                     style={{ background: '#0A0A0A', color: '#FFFFFF' }}
@@ -146,9 +145,8 @@ export default function Landing() {
         
 
         <div
-          className="w-full max-w-5xl mx-auto text-left"
+          className="w-full max-w-5xl mx-auto text-left mt-10 md:mt-20"
           style={{
-            marginTop: '80px',
             border: '1px solid #EAEAEA',
             borderRadius: '12px',
             overflow: 'hidden',
@@ -157,19 +155,19 @@ export default function Landing() {
           }}
         >
           <div
-            className="flex items-center gap-2 px-4 py-3"
+            className="flex items-center gap-2 px-3 sm:px-4 py-3"
             style={{
               background: '#FAFAFA',
               borderBottom: '1px solid #EAEAEA',
             }}
           >
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-shrink-0">
               <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#E5E5E5' }} />
               <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#E5E5E5' }} />
               <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#E5E5E5' }} />
             </div>
             <div
-              className="flex-1 mx-4 text-center text-xs font-mono"
+              className="flex-1 min-w-0 mx-2 sm:mx-4 text-center text-xs font-mono truncate"
               style={{
                 color: '#9A9A9A',
                 background: '#FFFFFF',
@@ -182,7 +180,13 @@ export default function Landing() {
             </div>
           </div>
 
-          <DashboardDemo />
+          {/*
+            DashboardDemo has fixed-pixel internals (160px sidebar, 140/70/80px
+            table columns) that squash unreadably below ~600px. ScaledDashboardDemo
+            measures the actual available width and scales the whole 640px design
+            down to fill it exactly, instead of guessing a fixed scale factor.
+          */}
+          <ScaledDashboardDemo />
         </div>
       </section>
       </Reveal>
@@ -196,8 +200,7 @@ export default function Landing() {
         }}
       >
         <div
-          className="max-w-4xl mx-auto px-8 text-center"
-          style={{ paddingTop: '100px', paddingBottom: '100px' }}
+          className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 text-center pt-16 md:pt-[100px] pb-16 md:pb-[100px]"
         >
           <p
             style={{
@@ -214,7 +217,7 @@ export default function Landing() {
           <div className="mt-14 mb-14">
             <p
               style={{
-                fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+                fontSize: 'clamp(2rem, 7vw, 4.5rem)',
                 fontWeight: 800,
                 letterSpacing: '-0.035em',
                 lineHeight: 1.1,
@@ -226,7 +229,7 @@ export default function Landing() {
             <p
               className="mt-2"
               style={{
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontSize: 'clamp(1.75rem, 5.5vw, 3.5rem)',
                 fontWeight: 800,
                 letterSpacing: '-0.035em',
                 lineHeight: 1.1,
@@ -284,9 +287,9 @@ export default function Landing() {
       <Reveal>
       <section
         id="product"
-        style={{ paddingTop: '100px', paddingBottom: '100px' }}
+        className="pt-16 md:pt-[100px] pb-16 md:pb-[100px]"
       >
-        <div className="max-w-5xl mx-auto px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8">
           <div className="mb-16 text-center">
             <h2
               style={{
@@ -317,7 +320,7 @@ export default function Landing() {
             {steps.map(({ num, title, description }) => (
               <div
                 key={num}
-                className="flex flex-col items-center text-center px-6 relative"
+                className="flex flex-col items-center text-center px-4 sm:px-6 relative"
                 style={{ paddingTop: '0', paddingBottom: '0' }}
               >
                 <span
@@ -368,9 +371,9 @@ export default function Landing() {
       <Reveal>
       <section
         id="pricing"
-        style={{ paddingTop: '100px', paddingBottom: '100px' }}
+        className="pt-16 md:pt-[100px] pb-16 md:pb-[100px]"
       >
-        <div className="max-w-4xl mx-auto px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
           <div className="text-center mb-14">
             <h2
               style={{
@@ -389,10 +392,10 @@ export default function Landing() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <div
+              className="p-6 md:p-8"
               style={{
                 border: '1px solid #EAEAEA',
                 borderRadius: '12px',
-                padding: '32px',
                 display: 'flex',
                 flexDirection: 'column',
               }}
@@ -431,7 +434,7 @@ export default function Landing() {
               ) : (
                 <>
                   <SignedOut>
-                    <SignInButton mode="modal">
+                    <SignInButton mode="modal" forceRedirectUrl="/dashboard">
                       <button
                         className="w-full py-3 rounded-full text-sm font-semibold transition-all duration-150"
                         style={{
@@ -467,10 +470,10 @@ export default function Landing() {
 
             {/* Pro tier */}
             <div
+              className="p-6 md:p-8"
               style={{
                 border: '2px solid #0A0A0A',
                 borderRadius: '12px',
-                padding: '32px',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
@@ -478,7 +481,7 @@ export default function Landing() {
             >
               {/* Badge */}
               <div
-                className="flex items-center gap-3 mb-4"
+                className="flex items-center gap-2 sm:gap-3 mb-4 flex-wrap"
               >
                 <span
                   style={{
@@ -568,13 +571,13 @@ export default function Landing() {
 
         {/* Footer */}
         <footer
+          className="pt-10 sm:pt-12 pb-8 sm:pb-10"
           style={{
             borderTop: '1px solid #1A1A1A',
-            padding: '48px 0 40px',
           }}
         >
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 sm:gap-8 mb-8 sm:mb-12">
               {/* Brand */}
               <div className="col-span-2">
                 <span

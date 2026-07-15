@@ -17,7 +17,7 @@ function SkeletonRow() {
   return (
     <tr>
       {[40, 64, 16, 20, 24].map((w, i) => (
-        <td key={i} className="px-5 py-3.5">
+        <td key={i} className="px-3 sm:px-5 py-3.5">
           <div
             className={`h-3.5 rounded-full animate-pulse w-${w}`}
             style={{ background: 'var(--border)', width: `${w * 4}px` }}
@@ -83,7 +83,7 @@ export function LinksTable({ links, loading, onDelete }: Props) {
                 {['Short URL', 'Destination', 'Clicks', 'Created', ''].map((h, i) => (
                   <th
                     key={i}
-                    className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide"
+                    className="px-3 sm:px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
                     style={{ color: 'var(--text-muted)' }}
                   >
                     {h}
@@ -109,7 +109,7 @@ export function LinksTable({ links, loading, onDelete }: Props) {
                     className="transition-colors duration-100 hover:bg-[var(--bg-primary)]"
                     style={{ borderBottom: '1px solid var(--border-light)' }}
                   >
-                    <td className="px-5 py-3.5">
+                    <td className="px-3 sm:px-5 py-3.5">
                       <div className="flex items-center gap-1.5">
                         <span
                           className="font-mono text-xs font-semibold"
@@ -129,12 +129,12 @@ export function LinksTable({ links, loading, onDelete }: Props) {
                         </a>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 max-w-[260px]">
+                    <td className="px-3 sm:px-5 py-3.5 max-w-[180px] sm:max-w-[260px]">
                       <span className="text-xs truncate block" style={{ color: 'var(--text-secondary)' }}>
                         {truncateUrl(link.longUrl, 55)}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-3 sm:px-5 py-3.5">
                       <span
                         className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
                         style={{
@@ -145,12 +145,12 @@ export function LinksTable({ links, loading, onDelete }: Props) {
                         {link.totalClicks.toLocaleString()}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-3 sm:px-5 py-3.5">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                         {formatRelativeTime(link.createdAt)}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-3 sm:px-5 py-3.5">
                       <div className="flex items-center gap-1">
                         <Link
                           to={`/analytics/${link.slug}`}

@@ -57,8 +57,8 @@ export default function Analytics() {
     <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <Sidebar />
 
-      <main className="flex-1 pl-[220px]">
-        <div className="max-w-6xl mx-auto px-8 py-8 flex flex-col gap-8">
+      <main className="flex-1 md:pl-[220px] pt-14 md:pt-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6 md:gap-8">
 
           {/* Back */}
           <Link
@@ -74,7 +74,7 @@ export default function Analytics() {
 
           {/* Header */}
           <div
-            className="rounded-2xl p-6 flex flex-col gap-3"
+            className="rounded-2xl p-4 sm:p-6 flex flex-col gap-3"
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border)',
@@ -82,17 +82,17 @@ export default function Analytics() {
             }}
           >
             <div className="flex items-start justify-between gap-4">
-              <div className="flex flex-col gap-1 min-w-0">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-1 min-w-0 flex-1">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="font-mono text-xl font-bold"
+                    className="font-mono text-xl font-bold truncate"
                     style={{ color: 'var(--accent)' }}
                   >
                     /{slug}
                   </span>
                   <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors duration-150"
+                    className="flex-shrink-0 flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors duration-150"
                     style={{
                       background: copied ? 'var(--accent-light)' : 'var(--bg-primary)',
                       color: copied ? 'var(--accent)' : 'var(--text-muted)',
@@ -105,7 +105,7 @@ export default function Analytics() {
                     href={shortUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 rounded-lg transition-colors duration-150"
+                    className="flex-shrink-0 p-1.5 rounded-lg transition-colors duration-150"
                     style={{ color: 'var(--text-muted)', background: 'var(--bg-primary)', border: '1px solid var(--border)' }}
                   >
                     <ExternalLink size={13} />
@@ -133,7 +133,7 @@ export default function Analytics() {
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
             ) : (
@@ -169,7 +169,7 @@ export default function Analytics() {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div
-              className="rounded-2xl p-6 flex flex-col gap-4"
+              className="rounded-2xl p-4 sm:p-6 flex flex-col gap-4"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
@@ -192,7 +192,7 @@ export default function Analytics() {
             </div>
 
             <div
-              className="rounded-2xl p-6 flex flex-col gap-4"
+              className="rounded-2xl p-4 sm:p-6 flex flex-col gap-4"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
@@ -225,7 +225,7 @@ export default function Analytics() {
             }}
           >
             <div
-              className="px-6 py-4"
+              className="px-4 sm:px-6 py-4"
               style={{ borderBottom: '1px solid var(--border-light)' }}
             >
               <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>

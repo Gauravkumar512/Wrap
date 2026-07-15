@@ -50,7 +50,7 @@ export function RecentClicksTable({ clicks }: Props) {
             {['Time', 'Country', 'Device', 'Referrer', 'IP Address'].map(h => (
               <th
                 key={h}
-                className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide"
+                className="px-3 sm:px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
                 style={{ color: 'var(--text-muted)' }}
               >
                 {h}
@@ -65,19 +65,19 @@ export function RecentClicksTable({ clicks }: Props) {
               className="transition-colors duration-100 hover:bg-[var(--bg-primary)]"
               style={{ borderBottom: '1px solid var(--border-light)' }}
             >
-              <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+              <td className="px-3 sm:px-5 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                 {formatDateTime(click.clickedAt)}
               </td>
-              <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+              <td className="px-3 sm:px-5 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                 {click.country || '—'}
               </td>
-              <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+              <td className="px-3 sm:px-5 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                 {parseDevice(click.userAgent)}
               </td>
-              <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+              <td className="px-3 sm:px-5 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                 {parseReferrer(click.referrer)}
               </td>
-              <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+              <td className="px-3 sm:px-5 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                 {click.ipAddress || '—'}
               </td>
             </tr>

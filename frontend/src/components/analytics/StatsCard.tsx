@@ -11,7 +11,7 @@ interface Props {
 export function StatsCard({ label, value, icon: Icon, accent, sub }: Props) {
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col gap-3"
+      className="rounded-2xl p-4 sm:p-5 flex flex-col gap-2 sm:gap-3 min-w-0"
       style={{
         background: accent ? 'var(--accent)' : 'var(--bg-card)',
         border: accent ? 'none' : '1px solid var(--border)',
@@ -38,9 +38,9 @@ export function StatsCard({ label, value, icon: Icon, accent, sub }: Props) {
           />
         </div>
       </div>
-      <div>
+      <div className="min-w-0">
         <p
-          className="text-2xl font-bold leading-none"
+          className="text-xl sm:text-2xl font-bold leading-none truncate"
           style={{ color: accent ? '#fff' : 'var(--text-primary)' }}
         >
           {value}

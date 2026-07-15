@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useUser, useClerk } from '@clerk/clerk-react'
-import { LayoutDashboard, BarChart2, User, LogOut, ChevronUp } from 'lucide-react'
+import { LayoutDashboard, BarChart2, User, LogOut, ChevronUp, Menu, X } from 'lucide-react'
 
 export function Sidebar() {
   const { user } = useUser()
   const { signOut, openUserProfile } = useClerk()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -19,34 +20,72 @@ export function Sidebar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
   return (
-    <aside
-      className="fixed left-0 top-0 h-screen w-[220px] flex flex-col z-20 select-none"
-      style={{
-        background: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border)',
-      }}
-    >
+    <>
       <div
-        className="px-6 py-5 flex items-center"
-        style={{ borderBottom: '1px solid var(--border)' }}
+        className="md:hidden fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-30"
+        style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}
       >
         <span
-          className="text-2xl leading-none"
-          style={{
-            fontWeight: 800,
-            letterSpacing: '-0.03em',
-            color: 'var(--text-primary)',
-          }}
+          className="text-xl leading-none"
+          style={{ fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}
         >
           Wrap.
         </span>
+        <button
+          type="button"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          className="flex items-center justify-center"
+          style={{ width: 32, height: 32, color: 'var(--text-primary)' }}
+          onClick={() => setMobileOpen(prev => !prev)}
+        >
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
+
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-30"
+          style={{ background: 'rgba(0,0,0,0.4)', top: '56px' }}
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed left-0 top-14 md:top-0 h-[calc(100vh-56px)] md:h-screen w-[240px] md:w-[220px] flex flex-col z-30 select-none transition-transform duration-200 ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
+        style={{
+          background: 'var(--bg-secondary)',
+          borderRight: '1px solid var(--border)',
+        }}
+      >
+        <div
+          className="hidden md:flex px-6 py-5 items-center"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <span
+            className="text-2xl leading-none"
+            style={{
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Wrap.
+          </span>
+        </div>
 
       <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
         <NavLink
           to="/dashboard"
           end
+          onClick={() => setMobileOpen(false)}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
               isActive ? '' : 'hover:bg-[var(--border-light)]'
@@ -63,6 +102,7 @@ export function Sidebar() {
 
         <NavLink
           to="/analytics"
+          onClick={() => setMobileOpen(false)}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
               isActive ? '' : 'hover:bg-[var(--border-light)]'
@@ -142,6 +182,7 @@ export function Sidebar() {
           />
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

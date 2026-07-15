@@ -63,7 +63,7 @@ export function CreateLinkModal({ onClose, onCreate }: Props) {
         }}
       >
         <div
-          className="flex items-center justify-between px-6 py-5"
+          className="flex items-center justify-between px-4 sm:px-6 py-5"
           style={{ borderBottom: '1px solid var(--border-light)' }}
         >
           <div className="flex items-center gap-2.5">
@@ -86,7 +86,7 @@ export function CreateLinkModal({ onClose, onCreate }: Props) {
           </button>
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-4 sm:px-6 py-5">
           {!result ? (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">

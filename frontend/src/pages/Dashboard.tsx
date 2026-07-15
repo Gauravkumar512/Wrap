@@ -29,10 +29,10 @@ export default function Dashboard() {
     <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <Sidebar />
 
-      <main className="flex-1 pl-[220px]">
-        <div className="max-w-6xl mx-auto px-8 py-8 flex flex-col gap-8">
+      <main className="flex-1 md:pl-[220px] pt-14 md:pt-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6 md:gap-8">
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 Your Links
@@ -45,7 +45,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-150"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-150 w-full sm:w-auto"
               style={{ background: 'var(--accent)', color: '#fff' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-hover)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'var(--accent)')}
@@ -55,7 +55,7 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <StatsCard
               label="Total Links"
               value={loading ? '—' : links.length}
